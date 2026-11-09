@@ -1,6 +1,6 @@
 import React from 'react';
 import { EnquiryForm } from '../components/enquiry/EnquiryForm';
-import { Mail, Clock, HelpCircle, Sparkles } from 'lucide-react';
+import { Mail, Clock, HelpCircle, Sparkles, Phone } from 'lucide-react';
 import { GLOBAL_FAQS } from '../data/faqsData';
 import { motion } from 'motion/react';
 
@@ -55,6 +55,27 @@ export const ContactPage: React.FC = () => {
               </h3>
 
               <div className="space-y-4 text-xs sm:text-sm">
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-[#2563EB] shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-xs text-[#626B78] block">Phone &amp; WhatsApp</span>
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-0.5">
+                      <a href="tel:+919003701800" className="font-bold text-[#151922] hover:text-[#2563EB] transition-colors">
+                        +91 90037 01800
+                      </a>
+                      <span className="text-slate-300">•</span>
+                      <a
+                        href="https://wa.me/919003701800"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-emerald-700 hover:underline"
+                      >
+                        Chat on WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-3">
                   <Mail className="h-5 w-5 text-[#2563EB] shrink-0 mt-0.5" />
                   <div>

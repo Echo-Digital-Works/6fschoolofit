@@ -48,7 +48,16 @@ export const Footer: React.FC = () => {
             </p>
             <div className="text-[11px] text-[#626B78] space-y-0.5 pt-1">
               <p className="font-semibold text-[#151922]">📍 Chennai Campus & Global Online Labs</p>
-              <p>Chennai, Tamil Nadu, India • admissions@6fitschool.com</p>
+              <p>
+                Chennai, Tamil Nadu, India •{' '}
+                <a href="tel:+919003701800" className="font-semibold text-[#151922] hover:text-[#2563EB] transition-colors">
+                  +91 90037 01800
+                </a>{' '}
+                •{' '}
+                <a href="mailto:admissions@6fitschool.com" className="hover:text-[#2563EB] transition-colors">
+                  admissions@6fitschool.com
+                </a>
+              </p>
             </div>
           </div>
 
