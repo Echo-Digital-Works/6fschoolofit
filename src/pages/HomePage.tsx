@@ -29,6 +29,7 @@ import {
   Zap,
   Target,
   Compass,
+  Phone,
   Mail,
   Clock,
   ChevronDown,
@@ -1188,6 +1189,27 @@ export const HomePage: React.FC = () => {
                   Admissions Helpline
                 </h4>
                 <div className="space-y-4 text-xs sm:text-sm">
+                  <div className="flex items-start gap-3">
+                    <Phone className="h-5 w-5 text-[#2563EB] shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-[#151922]">Phone &amp; WhatsApp</strong>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs mt-0.5">
+                        <a href="tel:+919003701800" className="text-[#2563EB] font-semibold hover:underline">
+                          +91 90037 01800
+                        </a>
+                        <span className="text-slate-300">•</span>
+                        <a
+                          href="https://wa.me/919003701800"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-700 font-semibold hover:underline"
+                        >
+                          WhatsApp Enquiry
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex items-start gap-3">
                     <Mail className="h-5 w-5 text-[#2563EB] shrink-0 mt-0.5" />
                     <div>

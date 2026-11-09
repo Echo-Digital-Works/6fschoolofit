@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { EnquiryFormData, FormErrors } from '../../types';
 import { COURSES } from '../../data/coursesData';
 import {
@@ -16,6 +16,34 @@ import {
   MessageSquare,
   ArrowRight,
 } from 'lucide-react';
+
+export const ADMISSIONS_WHATSAPP_NUMBER = '919003701800';
+export const ADMISSIONS_PHONE_DISPLAY = '+91 90037 01800';
+
+const buildWhatsAppEnquiryUrl = (data: EnquiryFormData): string => {
+  const statusText =
+    data.currentStatus === 'Other'
+      ? data.otherStatusDetails?.trim() || 'Other'
+      : data.currentStatus;
+
+  const lines = [
+    '*New Course Enquiry - 6F School of IT*',
+    '',
+    `*Full Name:* ${data.fullName.trim()}`,
+    `*Email:* ${data.email.trim()}`,
+    `*Phone Number:* ${data.phoneNumber.trim()}`,
+    `*Location / City:* ${data.location.trim()}`,
+    `*Program Interested In:* ${data.courseInterestedIn}`,
+    `*Age Category:* ${data.ageCategory}`,
+    `*Current Status:* ${statusText}`,
+  ];
+
+  if (data.message.trim()) {
+    lines.push(`*Questions / Goals:* ${data.message.trim()}`);
+  }
+
+  return `https://wa.me/${ADMISSIONS_WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+};
 
 interface EnquiryFormProps {
   initialCourse?: string;
@@ -58,9 +86,20 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
   });
 
   const [submittedSummary, setSubmittedSummary] = useState<EnquiryFormData | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState('');
+  const [wasPopupBlocked, setWasPopupBlocked] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initialCourse) {
@@ -146,17 +185,33 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
     if (!validate()) return;
+
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
 
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 750));
-      setSubmittedSummary({ ...formData });
+      const submittedData: EnquiryFormData = { ...formData };
+      const targetUrl = buildWhatsAppEnquiryUrl(submittedData);
+
+      // Open WhatsApp synchronously within the user submit gesture so browsers do not block it
+      const openedWindow = window.open(targetUrl, '_blank');
+      if (openedWindow) {
+        openedWindow.opener = null;
+      }
+      const blocked = !openedWindow;
+
+      setSubmittedSummary(submittedData);
+      setWhatsappUrl(targetUrl);
+      setWasPopupBlocked(blocked);
       setSubmitStatus('success');
       setFormData({
         fullName: '',
@@ -171,10 +226,10 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
       });
       setErrors({});
 
-      if (onSuccess) {
-        setTimeout(() => {
+      if (onSuccess && !blocked) {
+        autoCloseTimerRef.current = setTimeout(() => {
           onSuccess();
-        }, 3000);
+        }, 4000);
       }
     } catch {
       setSubmitStatus('error');
@@ -195,17 +250,33 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
             <div className="flex-1 space-y-3">
               <div>
                 <h4 className="text-base font-bold text-emerald-950">
-                  Enquiry Submitted Successfully!
+                  {wasPopupBlocked ? 'Ready to Send via WhatsApp!' : 'Enquiry Ready on WhatsApp!'}
                 </h4>
                 <p className="mt-1 text-xs text-emerald-800 leading-relaxed">
                   Thank you,{' '}
                   <span className="font-semibold text-emerald-950">
                     {submittedSummary?.fullName || 'Learner'}
                   </span>
-                  . Our admissions and engineering mentors have received your enquiry. We will share
-                  the full curriculum syllabus, upcoming cohort dates, and lab access details shortly.
+                  {wasPopupBlocked
+                    ? `. Click the button below to send your enquiry details directly to ${ADMISSIONS_PHONE_DISPLAY} on WhatsApp.`
+                    : `. Your enquiry details have been prepared for our admissions WhatsApp (${ADMISSIONS_PHONE_DISPLAY}). Please tap Send in WhatsApp to complete your submission.`}
                 </p>
               </div>
+
+              {whatsappUrl && (
+                <div>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#1EBE5D] transition-colors"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Open WhatsApp ({ADMISSIONS_PHONE_DISPLAY})</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              )}
 
               {/* Submitted Details Summary Card */}
               {submittedSummary && (
@@ -247,7 +318,15 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
               <div className="flex items-center gap-4 pt-1">
                 <button
                   type="button"
-                  onClick={() => setSubmitStatus('idle')}
+                  onClick={() => {
+                    if (autoCloseTimerRef.current) {
+                      clearTimeout(autoCloseTimerRef.current);
+                      autoCloseTimerRef.current = null;
+                    }
+                    setSubmitStatus('idle');
+                    setWhatsappUrl('');
+                    setWasPopupBlocked(false);
+                  }}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 underline underline-offset-4 hover:text-emerald-950 cursor-pointer"
                 >
                   <span>Submit another enquiry</span>
@@ -255,7 +334,13 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
                 {onCancel && (
                   <button
                     type="button"
-                    onClick={onCancel}
+                    onClick={() => {
+                      if (autoCloseTimerRef.current) {
+                        clearTimeout(autoCloseTimerRef.current);
+                        autoCloseTimerRef.current = null;
+                      }
+                      onCancel();
+                    }}
                     className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-950 cursor-pointer"
                   >
                     <span>Continue to Website</span>
@@ -555,7 +640,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
               )}
             </div>
             <span className="mt-2 block text-center text-[10px] text-[#626B78]">
-              Free syllabus download & batch schedule details sent upon enquiry. Zero spam.
+              Enquiries go directly to {ADMISSIONS_PHONE_DISPLAY} on WhatsApp for syllabus &amp; batch schedule details. Zero spam.
             </span>
           </div>
         </form>
